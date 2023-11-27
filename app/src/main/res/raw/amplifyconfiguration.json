@@ -1,0 +1,97 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "geo": {
+    "plugins": {
+      "awsLocationGeoPlugin": {
+        "region": "us-east-1",
+        "maps": {
+          "items": {
+            "FirstMap": {
+              "style": {
+                "version": 8,
+                "name": "Open Data Standard Light",
+                "sources": {
+                  "CustomSource": {
+                    "type": "GEOJSON",
+                    "data": {
+                      "type": "FeatureCollection",
+                      "features": [
+                        {
+                          "type": "Feature",
+                          "properties": {
+                            "name": "MyFirstPlace"
+                          },
+                          "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                              -122.3301,
+                              47.6038
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  },
+                  "CustomSource2": {
+                    "type": "GEOJSON",
+                    "data": {
+                      "type": "FeatureCollection",
+                      "features": [
+                        {
+                          "type": "Feature",
+                          "properties": {
+                            "name": "MySecondPlace"
+                          },
+                          "geometry": {
+                            "type": "Point",
+                            "coordinates": [
+                              -122.3301,
+                              47.6038
+                            ]
+                          }
+                        }
+                      ]
+                    }
+                  }
+                },
+                "glyphs": "mapbox://fonts/mapbox/{fontstack}/{range}.pbf",
+                "layers": [
+                ],
+                "id": "CustomStyle"
+              },
+              "layers": {
+              }
+            }
+          },
+          "default": "FirstMap"
+        },
+        "searchIndices": {
+          "items": [
+            "MyFirstIndex"
+          ],
+          "default": "MyFirstIndex"
+        }
+      }
+    }
+  },
+  "auth": {
+    "plugins": {
+      "awsCognitoAuthPlugin": {
+        "UserAgent": "aws-amplify-cli/0.1.0",
+        "Version": "0.1.0",
+        "IdentityManager": {
+          "Default": {}
+        },
+        "CredentialsProvider": {
+          "CognitoIdentity": {
+            "Default": {
+              "PoolId": "us-east-1:259894ca-e77b-43ca-bf0a-4ec452f30217",
+              "Region": "us-east-1"
+            }
+          }
+        }
+      }
+    }
+  }
+}

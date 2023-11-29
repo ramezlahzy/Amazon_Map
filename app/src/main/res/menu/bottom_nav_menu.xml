@@ -1,0 +1,24 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/navigation_home"
+        android:checked="true"
+        android:icon="@drawable/compass"
+        android:title="Home" />
+    <item
+        android:id="@+id/navigation_trackers"
+        android:icon="@drawable/radar"
+        android:title="Trackers" />
+    <item
+        android:id="@+id/navigation_geofences"
+        android:icon="@drawable/location"
+        android:title="Geofences" />
+    <item
+        android:id="@+id/navigation_settings"
+        android:icon="@drawable/setting"
+        android:title="Settings" />
+    <item
+        android:id="@+id/navigation_about"
+        android:icon="@drawable/info"
+        android:title="About" />
+
+</menu>

@@ -3,84 +3,79 @@ package com.example.amazon_map
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
 import com.amplifyframework.AmplifyException
 import com.amplifyframework.auth.cognito.AWSCognitoAuthPlugin
 import com.amplifyframework.core.Amplify
 import com.amplifyframework.geo.location.AWSLocationGeoPlugin
-import com.amplifyframework.geo.maplibre.view.MapLibreView
-import com.example.amazon_map.ui.theme.Amazon_MapTheme
-import com.mapbox.mapboxsdk.camera.CameraPosition
-import com.mapbox.mapboxsdk.geometry.LatLng
+import androidx.fragment.app.Fragment
+import com.example.amazon_map.Fragments.AboutFragment
+import com.example.amazon_map.Fragments.GeofencesFragment
+import com.example.amazon_map.Fragments.HomeFragment
+import com.example.amazon_map.Fragments.SettingsFragment
+import com.example.amazon_map.Fragments.TrackersFragment
+import com.google.android.material.bottomnavigation.BottomNavigationView
 
 class MainActivity : AppCompatActivity() {
 
-    private val mapView by lazy {
-        findViewById<MapLibreView>(R.id.mapView)
-    }
+    private val homeFragment = HomeFragment()
+    private val trackersFragment = TrackersFragment()
+    private val geofencesFragment = GeofencesFragment()
+    private val settingsFragment = SettingsFragment()
+    private val aboutFragment = AboutFragment()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         initAmplify()
         setContentView(R.layout.activity_main)
-        mapView.getMapAsync { map ->
-            val initialPosition = LatLng(47.6160281982247, -122.32642111977668)
-            map.cameraPosition = CameraPosition.Builder()
-                .target(initialPosition)
-                .zoom(13.0)
-                .build()
-        }
-        mapView.onStart();
+        val navView: BottomNavigationView = findViewById(R.id.bottom_navigation_view)
+        navView.setOnNavigationItemSelectedListener(onNavigationItemSelectedListener)
+        switchFragment(homeFragment)
     }
 
     private fun initAmplify() {
         try {
             Amplify.addPlugin(AWSCognitoAuthPlugin())
             Amplify.addPlugin(AWSLocationGeoPlugin())
-            Amplify.configure(applicationContext)
-            //api key)
-
+            Amplify.configure(applicationContext) //applicationContext
             Log.i("AndroidQuickStart", "Initialized Amplify")
         } catch (error: AmplifyException) {
             Log.e("AndroidQuickStart", "Could not initialize Amplify", error)
         }
     }
 
-    override fun onStart() {
-        Log.d("AmazonActivity", "AmazonActivityonStart: "+Amplify.Auth.currentUser)
-        super.onStart()
-        mapView?.onStart()
+    private fun switchFragment(fragment: Fragment) {
+        val fragmentTransaction =
+            supportFragmentManager.beginTransaction()
+        fragmentTransaction.replace(R.id.fragment_container, fragment)
+        fragmentTransaction.commit()
+
     }
 
-    override fun onResume() {
-        super.onResume()
-        mapView?.onResume()
-    }
+    private val onNavigationItemSelectedListener =
+        BottomNavigationView.OnNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.navigation_home -> {
+                    switchFragment(homeFragment)
+                    return@OnNavigationItemSelectedListener true
+                }
+                R.id.navigation_trackers -> {
+                    switchFragment(trackersFragment)
+                    return@OnNavigationItemSelectedListener true
+                }
+                R.id.navigation_geofences -> {
+                    switchFragment(geofencesFragment)
+                    return@OnNavigationItemSelectedListener true
+                }
+                R.id.navigation_settings -> {
+                    switchFragment(settingsFragment)
+                    return@OnNavigationItemSelectedListener true
+                }
+                R.id.navigation_about -> {
+                    switchFragment(aboutFragment)
+                    return@OnNavigationItemSelectedListener true
+                }
 
-    override fun onPause() {
-        super.onPause()
-        mapView?.onPause()
-    }
+            }
+            false
+        }
 
-    override fun onStop() {
-        super.onStop()
-        mapView?.onStop()
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        mapView?.onSaveInstanceState(outState)
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapView?.onLowMemory()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mapView?.onDestroy()
-    }
 }

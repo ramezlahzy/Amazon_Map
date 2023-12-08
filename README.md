@@ -5,7 +5,7 @@ A map that visualizes and stores the search locations of all users.
 
 # App Setup
 
-MyApp is an Android application developed with Android Studio, Firebase Firestore, and Amazon Amplify. This guide outlines the steps to connect the Android app to Firebase and Amazon Amplify SDKs.
+amazon Map is an Android application developed with Android Studio, Firebase Firestore, and Amazon Amplify. This guide outlines the steps to connect the Android app to Firebase and Amazon Amplify SDKs.
 
 ## Firebase Firestore Integration:
 

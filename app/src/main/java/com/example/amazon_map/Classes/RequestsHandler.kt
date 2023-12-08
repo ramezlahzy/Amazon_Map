@@ -15,22 +15,15 @@ import android.widget.Toast
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import  android.app.Activity
-import android.content.SharedPreferences
-import java.util.prefs.Preferences
 
-class RequestsHandler {
+class RequestsHandler(
+    private var activity: Activity,
+    private val sharedPreferences: MyPreferences
+) {
     private var fusedLocationProvider: FusedLocationProviderClient? = null
     private var lastLocation: Location? = null
-    private var activity: Activity
     private var TAG = "LocationFragment"
-    private val sharedPreferences: MyPreferences;
 
-    constructor(activity: Activity,sharedPreferences: MyPreferences) {
-        fusedLocationProvider = LocationServices.getFusedLocationProviderClient(activity)
-        this.activity = activity
-        this.sharedPreferences = sharedPreferences
-        checkLocationPermission()
-    }
     private fun checkLocationPermission() {
         if (ActivityCompat.checkSelfPermission(
                 activity,
@@ -87,8 +80,11 @@ class RequestsHandler {
             val locationList = locationResult.locations
             if (locationList.isNotEmpty()) {
                 lastLocation = locationList.last()
-                //save last location in shared preferences
-                Log.d(TAG, "onLocationResult: " + lastLocation?.latitude + " " + lastLocation?.longitude)
+                val location=Location()
+                location.latitude=lastLocation!!.latitude
+                location.longitude=lastLocation!!.longitude
+                sharedPreferences.saveLocation(location)
+//                Log.d(TAG, "onLocationResult: " + lastLocation?.latitude + " " + lastLocation?.longitude)
             }
         }
     }
@@ -160,5 +156,10 @@ class RequestsHandler {
     }
     companion object {
         private const val MY_PERMISSIONS_REQUEST_LOCATION = 99
+    }
+
+    init {
+        fusedLocationProvider = LocationServices.getFusedLocationProviderClient(activity)
+        checkLocationPermission()
     }
 }

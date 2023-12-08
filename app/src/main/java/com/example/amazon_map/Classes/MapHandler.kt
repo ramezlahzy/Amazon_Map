@@ -18,28 +18,135 @@ import com.amplifyframework.geo.maplibre.view.support.fadeIn
 import com.amplifyframework.geo.maplibre.view.support.fadeOut
 import com.amplifyframework.geo.models.Coordinates
 import com.amplifyframework.geo.options.GeoSearchByCoordinatesOptions
+import com.example.amazon_map.API.API
 import com.example.amazon_map.Fragments.HomeFragment
 import com.mapbox.mapboxsdk.camera.CameraPosition
+import com.mapbox.mapboxsdk.camera.CameraUpdateFactory
 import com.mapbox.mapboxsdk.geometry.LatLng
 import com.mapbox.mapboxsdk.maps.MapboxMap
+import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
+import kotlinx.coroutines.runBlocking
 
-class MapHandler {
-    private  var mapView: MapLibreView
-    private  var searchEditText: AutoCompleteTextView
-    private  var descriptionView: TextView
-    private  var locationPoint: ImageView
-    private val mapLableLocation: MutableMap<String, HomeFragment.Location> = mutableMapOf()
+class MapHandler(
+    private var mapView: MapLibreView,
+    private var searchEditText: AutoCompleteTextView,
+    private var descriptionView: TextView,
+    private var locationPoint: ImageView,
+    private var api: API,
     private var context: HomeFragment? = null
+) {
+    private val mapLableLocation: MutableMap<String, Location> = mutableMapOf()
 
-    constructor(mapView: MapLibreView, searchEditText: AutoCompleteTextView, descriptionView: TextView, locationPoint: ImageView, context: HomeFragment? = null){
-        this.mapView=mapView
-        this.searchEditText=searchEditText
-        this.descriptionView=descriptionView
-        this.locationPoint=locationPoint
-        this.context=context
+    private fun moveCameraToSelectedPlace(selectedPlace: Location) {
+        val newCameraPosition = CameraPosition.Builder()
+            .target(
+                LatLng(
+                    selectedPlace.latitude,
+                    selectedPlace.longitude
+                )
+            )
+            .zoom(DEFAULT_ZOOM_LEVEL.toDouble())
+            .build()
+        mapView.getMapAsync { map ->
+            map.cameraPosition = newCameraPosition
+        }
+        updateSearches(selectedPlace)
+    }
+
+    fun updateSearches(location: Location) {
+        runBlocking {
+            val searches = api.getAllSearchesInRange(location)
+            searches.forEach { search ->
+                mapView.getStyle { map, style ->
+                    val spaceNeedle = LatLng(search.latitude!!, search.longitude!!)
+                    mapView.symbolManager.create(
+                        SymbolOptions()
+                            .withIconImage("place")
+                            .withLatLng(spaceNeedle)
+                    )
+                }
+            }
+        }
+    }
+
+    private fun reverseGeocode(
+        map: MapboxMap
+    ) {
+        val options = GeoSearchByCoordinatesOptions.builder()
+            .maxResults(1)
+            .build()
+
+//        Log.d(TAG, "reverseGeocode: " + locationPoint.x.toDouble() + " " +locationPoint.y.toDouble())
+//        Log.d(TAG, "reverseGeocode: " + map.cameraPosition.target.longitude + " " + map.cameraPosition.target.latitude)
+        updateSearches(Location(
+                map.cameraPosition.target.latitude,
+                map.cameraPosition.target.longitude
+            ))
+        val centerCoordinates = Coordinates().apply {
+            longitude = map.cameraPosition.target.longitude
+            latitude = map.cameraPosition.target.latitude
+        }
+        Amplify.Geo.searchByCoordinates(centerCoordinates, options,
+            { result ->
+                result.places.firstOrNull()?.let { place ->
+                    val amazonPlace = (place as AmazonLocationPlace)
+                    ThreadUtils.runOnUiThread { toggleDescriptionText(amazonPlace.label) }
+                }
+            },
+            { exp ->
+                Log.e("AndroidQuickStart", "Failed to reverse geocode : $exp")
+            }
+        )
+    }
+
+    private fun toggleDescriptionText(label: String? = "") {
+        if (label.isNullOrBlank()) {
+            descriptionView.fadeOut()
+        } else {
+            descriptionView.text = label
+            descriptionView.fadeIn()
+        }
+    }
+
+    fun onResume() {
+        mapView.onResume()
+    }
+
+    fun onPause() {
+        mapView?.onPause()
+    }
+
+    fun onStart() {
+        mapView?.onStart()
+    }
+
+
+    fun onStop() {
+        mapView?.onStop()
+    }
+
+    fun onSaveInstanceState(outState: Bundle) {
+        mapView?.onSaveInstanceState(outState)
+    }
+
+    fun onLowMemory() {
+        mapView?.onLowMemory()
+    }
+
+    fun onDestroy() {
+        mapView?.onDestroy()
+    }
+
+
+    private val DEFAULT_ZOOM_LEVEL = 15.0f
+
+    init {
         searchEditText.setOnItemClickListener { parent, _, position, _ ->
             val selectedPlace = parent.getItemAtPosition(position) as String
             moveCameraToSelectedPlace(mapLableLocation[selectedPlace]!!)
+            runBlocking {
+                api.saveSearchWord(selectedPlace)
+            }
         }
         searchEditText.doOnTextChanged { text, _, _, _ ->
             if (text.isNullOrBlank()) {
@@ -50,7 +157,7 @@ class MapHandler {
                     val places = result.places
                     val locations = places.map { place ->
                         val amazonPlace = (place as AmazonLocationPlace)
-                        val location = HomeFragment.Location()
+                        val location = Location()
                         location.label = amazonPlace.label
                         location.latitude = amazonPlace.coordinates.latitude
                         location.longitude = amazonPlace.coordinates.longitude
@@ -111,111 +218,5 @@ class MapHandler {
             map.addOnCameraIdleListener { reverseGeocode(map) }
         }
     }
-    private fun moveCameraToSelectedPlace(selectedPlace: HomeFragment.Location) {
-        val newCameraPosition = CameraPosition.Builder()
-            .target(
-                LatLng(
-                    selectedPlace.latitude,
-                    selectedPlace.longitude
-                )
-            )
-            .zoom(DEFAULT_ZOOM_LEVEL.toDouble())
-            .build()
-        mapView.getMapAsync { map ->
-            map.cameraPosition = newCameraPosition
-        }
-    }
-    private fun reverseGeocode(
-        map: MapboxMap
-    ) {
-        val options = GeoSearchByCoordinatesOptions.builder()
-            .maxResults(1)
-            .build()
-
-//        Log.d(TAG, "reverseGeocode: " + locationPoint.x.toDouble() + " " +locationPoint.y.toDouble())
-//        Log.d(TAG, "reverseGeocode: " + map.cameraPosition.target.longitude + " " + map.cameraPosition.target.latitude)
-
-        val centerCoordinates = Coordinates().apply {
-            longitude = map.cameraPosition.target.longitude
-            latitude = map.cameraPosition.target.latitude
-        }
-        //put pins on the map
-//        val place = Place.builder()
-//            .coordinates(centerCoordinates)
-//            .build()
-//        map.getStyle { style ->
-//            style.addImage("marker-icon-id", resources.getDrawable(R.drawable.mapbox_marker_icon_default))
-//            style.addSource(com.amplifyframework.geo.maplibre.model.Source.builder()
-//                .id("marker-source-id")
-//                .place(place)
-//                .build())
-//            style.addLayer(com.amplifyframework.geo.maplibre.model.Layer.builder()
-//                .id("marker-layer-id")
-//                .sourceId("marker-source-id")
-//                .type(com.amplifyframework.geo.maplibre.model.Layer.Type.SYMBOL)
-//                .iconImage("marker-icon-id")
-//                .iconAllowOverlap(true)
-//                .iconIgnorePlacement(true)
-//                .build())
-//        }
-        Amplify.Geo.searchByCoordinates(centerCoordinates, options,
-            { result ->
-                result.places.firstOrNull()?.let { place ->
-                    val amazonPlace = (place as AmazonLocationPlace)
-                    ThreadUtils.runOnUiThread { toggleDescriptionText(amazonPlace.label) }
-                }
-            },
-            { exp ->
-                Log.e("AndroidQuickStart", "Failed to reverse geocode : $exp")
-            }
-        )
-    }
-
-    private fun toggleDescriptionText(label: String? = "") {
-        if (label.isNullOrBlank()) {
-            descriptionView.fadeOut()
-        } else {
-            descriptionView.text = label
-            descriptionView.fadeIn()
-        }
-    }
-    fun onResume() {
-        mapView.onResume()
-    }
-    fun onPause() {
-        mapView?.onPause()
-    }
-
-
-
-    fun onStart() {
-        mapView?.onStart()
-    }
-
-
-    fun onStop() {
-        mapView?.onStop()
-    }
-
-    fun onSaveInstanceState(outState: Bundle) {
-        mapView?.onSaveInstanceState(outState)
-    }
-
-    fun onLowMemory() {
-        mapView?.onLowMemory()
-    }
-
-    fun onDestroy() {
-        mapView?.onDestroy()
-    }
-
-
-
-
-
-
-
-
-    private val DEFAULT_ZOOM_LEVEL = 15.0f
 
 }

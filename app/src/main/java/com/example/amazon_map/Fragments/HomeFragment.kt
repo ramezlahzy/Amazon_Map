@@ -40,35 +40,30 @@ class HomeFragment : Fragment() {
             param1 = it.getString(ARG_PARAM1)
             param2 = it.getString(ARG_PARAM2)
         }
+
+        // Get the user's Android ID and save it to the preferences
         val androidId = Secure.getString(requireContext().contentResolver, Secure.ANDROID_ID)
         preferences.saveUserId(androidId)
+        // Get the user's birth date and save it to the preferences
         val dialog = DateDialogFragment(this)
 
         if (preferences.getBirthDate() == null)
             dialog.showDialog()
-//        test()
     }
 
-    private fun test() {
-        val location = Location(30.0, 5.0)
-       runBlocking{
-            try {
-                val data = api.getAllSearchesInRange(location)
-            } catch (e: Exception) {
-                Log.d(TAG, "test: $e")
-            }
-        }
-    }
 
+    // This function is called when the user selects a date in the date picker dialog
     fun onDateSet(year: Int, month: Int, day: Int) {
         Log.d(TAG, "onDateSet: $year $month $day")
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.YEAR, year)
         calendar.set(Calendar.MONTH, month)
         calendar.set(Calendar.DAY_OF_MONTH, day)
+        // Save the birth date to the preferences
         preferences.saveBirthDate(calendar.time)
     }
 
+    //This function is called when permissions are granted or denied
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
@@ -77,6 +72,7 @@ class HomeFragment : Fragment() {
         requestsHandler.onRequestPermissionsResult(requestCode, permissions, grantResults)
     }
 
+    //Those lifecycle functions are called when the fragment is created or destroyed
     override fun onResume() {
         super.onResume()
         mapHandler.onResume()
@@ -98,6 +94,7 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        // Initialize the map handler that will handle all the map related operations
         mapHandler = MapHandler(
             view.findViewById(R.id.mapView),
             view.findViewById(R.id.search_edit_text),
@@ -108,6 +105,7 @@ class HomeFragment : Fragment() {
         )
     }
 
+    // Those lifecycle functions are called when the fragment is created or destroyed
     override fun onStart() {
         Log.d("AmazonActivity", "AmazonActivityonStart: " + Amplify.Auth.currentUser)
         super.onStart()

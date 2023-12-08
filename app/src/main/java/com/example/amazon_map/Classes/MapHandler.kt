@@ -27,6 +27,18 @@ import com.mapbox.mapboxsdk.maps.MapboxMap
 import com.mapbox.mapboxsdk.plugins.annotation.SymbolOptions
 import kotlinx.coroutines.runBlocking
 
+
+// this class is responsible for all the map actions
+/**
+ * @param map The map object whose center point to reverse geocode.
+ * @param searchEditText The search edit text view.
+ * @param descriptionView The description text view.
+ * @param locationPoint The location point image view.
+ * @param api The API object.
+ * @param context The context of the fragment.
+ * @constructor Creates a map handler object.
+ *  */
+
 class MapHandler(
     private var mapView: MapLibreView,
     private var searchEditText: AutoCompleteTextView,
@@ -37,7 +49,10 @@ class MapHandler(
 ) {
     private val mapLableLocation: MutableMap<String, Location> = mutableMapOf()
 
+
+    // Move the camera to the selected place and update searches in that location by calling the API
     private fun moveCameraToSelectedPlace(selectedPlace: Location) {
+        // Move the camera to the selected place
         val newCameraPosition = CameraPosition.Builder()
             .target(
                 LatLng(
@@ -47,13 +62,18 @@ class MapHandler(
             )
             .zoom(DEFAULT_ZOOM_LEVEL.toDouble())
             .build()
+
+        // Update the map
         mapView.getMapAsync { map ->
             map.cameraPosition = newCameraPosition
         }
+        // Update searches in that location
         updateSearches(selectedPlace)
     }
 
+    // Update searches in that location by calling the API
     fun updateSearches(location: Location) {
+
         runBlocking {
             val searches = api.getAllSearchesInRange(location)
             searches.forEach { search ->
@@ -69,15 +89,18 @@ class MapHandler(
         }
     }
 
+    /**
+     * Reverse geocodes the map's center point and displays the address in a text view.
+     *  This function is called when the user stops moving the map.
+     *  It calls the API to get the address of the map's center point and displays it in a text view.
+     *  It also updates the searches in that location.
+     */
     private fun reverseGeocode(
         map: MapboxMap
     ) {
         val options = GeoSearchByCoordinatesOptions.builder()
             .maxResults(1)
             .build()
-
-//        Log.d(TAG, "reverseGeocode: " + locationPoint.x.toDouble() + " " +locationPoint.y.toDouble())
-//        Log.d(TAG, "reverseGeocode: " + map.cameraPosition.target.longitude + " " + map.cameraPosition.target.latitude)
         updateSearches(Location(
                 map.cameraPosition.target.latitude,
                 map.cameraPosition.target.longitude
@@ -99,6 +122,10 @@ class MapHandler(
         )
     }
 
+    /**
+     * Toggles the visibility of the description text view.
+     * @param label The label to display in the description text view.
+     */
     private fun toggleDescriptionText(label: String? = "") {
         if (label.isNullOrBlank()) {
             descriptionView.fadeOut()
@@ -107,7 +134,7 @@ class MapHandler(
             descriptionView.fadeIn()
         }
     }
-
+    // Map lifecycle methods
     fun onResume() {
         mapView.onResume()
     }
@@ -138,9 +165,19 @@ class MapHandler(
     }
 
 
+    // the default zoom level
     private val DEFAULT_ZOOM_LEVEL = 15.0f
 
+    /**
+     * Initializes the map handler.
+     */
     init {
+
+        // Initialize the map view
+        /**
+         * add a listener to the search edit text view.
+         * When the user selects a place from the drop-down list, the map moves to that place.
+         */
         searchEditText.setOnItemClickListener { parent, _, position, _ ->
             val selectedPlace = parent.getItemAtPosition(position) as String
             moveCameraToSelectedPlace(mapLableLocation[selectedPlace]!!)
@@ -148,6 +185,12 @@ class MapHandler(
                 api.saveSearchWord(selectedPlace)
             }
         }
+        /**
+         * When the user types a place name, the map displays a drop-down list of places that match the search text.
+         * When the user stops moving the map, the map reverse geocodes the map's center point and displays the address in a text view.
+         * When the user moves the location point image view, the map displays the address of the location point in a text view.
+         *
+         */
         searchEditText.doOnTextChanged { text, _, _, _ ->
             if (text.isNullOrBlank()) {
                 return@doOnTextChanged
@@ -180,6 +223,9 @@ class MapHandler(
                 }
             )
         }
+
+        // Initialize the location point image view
+
         locationPoint.setOnTouchListener(object : View.OnTouchListener {
             private var lastX: Float = 0f
             private var lastY: Float = 0f
@@ -208,12 +254,15 @@ class MapHandler(
                 return true
             }
         })
+
         mapView.getMapAsync { map ->
             val initialPosition = LatLng(47.6160281982247, -122.32642111977668)
             map.cameraPosition = CameraPosition.Builder()
                 .target(initialPosition)
                 .zoom(13.0)
                 .build()
+
+            // Add a listener to the map
             map.addOnCameraMoveStartedListener { toggleDescriptionText() }
             map.addOnCameraIdleListener { reverseGeocode(map) }
         }

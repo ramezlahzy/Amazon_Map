@@ -16,6 +16,17 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import  android.app.Activity
 
+/**
+ * This class is used to handle the requests of the user
+ * @param activity the activity that the user is in
+ * @property sharedPreferences the shared preferences object
+ * @property fusedLocationProvider the fused location provider object
+ * @property lastLocation the last location of the user
+ * @property TAG the tag of the class
+ * @property locationRequest the location request object
+ * @property locationCallback the location callback object
+
+ */
 class RequestsHandler(
     private var activity: Activity,
     private val sharedPreferences: MyPreferences
@@ -24,6 +35,11 @@ class RequestsHandler(
     private var lastLocation: Location? = null
     private var TAG = "LocationFragment"
 
+    /**
+     * This function is used to check if the user has the location permission
+     * if the user has the permission then it will request the location updates
+     * if the user doesn't have the permission then it will request the permission
+     */
     private fun checkLocationPermission() {
         if (ActivityCompat.checkSelfPermission(
                 activity,
@@ -52,6 +68,7 @@ class RequestsHandler(
 
             }
         } else {
+            //permission granted
             fusedLocationProvider?.requestLocationUpdates(
                 locationRequest,
                 locationCallback,
@@ -59,15 +76,24 @@ class RequestsHandler(
             )
         }
     }
+
+    /**
+     * This function is used to request the location permission
+     */
     private fun requestLocationPermission() {
         ActivityCompat.requestPermissions(
             activity,
             arrayOf(
                 Manifest.permission.ACCESS_FINE_LOCATION,
             ),
-           MY_PERMISSIONS_REQUEST_LOCATION
+            MY_PERMISSIONS_REQUEST_LOCATION
         )
     }
+
+    /**
+     * This function is used to get the location of the user
+     * @return the location of the user
+     */
     private val locationRequest: LocationRequest = LocationRequest.create().apply {
         interval = 30
         fastestInterval = 10
@@ -80,15 +106,18 @@ class RequestsHandler(
             val locationList = locationResult.locations
             if (locationList.isNotEmpty()) {
                 lastLocation = locationList.last()
-                val location=Location()
-                location.latitude=lastLocation!!.latitude
-                location.longitude=lastLocation!!.longitude
+                val location = Location()
+                //here we save the location of the user in the shared preferences
+                location.latitude = lastLocation!!.latitude
+                location.longitude = lastLocation!!.longitude
                 sharedPreferences.saveLocation(location)
-//                Log.d(TAG, "onLocationResult: " + lastLocation?.latitude + " " + lastLocation?.longitude)
             }
         }
     }
-     fun onResume() {
+
+
+    //those are lifecycle functions
+    fun onResume() {
         if (ContextCompat.checkSelfPermission(
                 activity,
                 Manifest.permission.ACCESS_FINE_LOCATION
@@ -103,19 +132,29 @@ class RequestsHandler(
             )
         }
     }
+
+    /**
+     * This function is used to handle the result of the permission request
+     * @param requestCode the request code of the permission
+     * @param permissions the permissions that the user requested
+     * @param grantResults the results of the permission request
+     */
     fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<String>,
         grantResults: IntArray
     ) {
+        //here we check if the user granted the permission or not
         when (requestCode) {
             MY_PERMISSIONS_REQUEST_LOCATION -> {
+                // If request is cancelled, the result arrays are empty.
                 if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     if (ContextCompat.checkSelfPermission(
                             activity,
                             Manifest.permission.ACCESS_FINE_LOCATION
                         ) == PackageManager.PERMISSION_GRANTED
                     ) {
+                        //here we request the location updates
                         fusedLocationProvider?.requestLocationUpdates(
                             locationRequest,
                             locationCallback,
@@ -124,6 +163,7 @@ class RequestsHandler(
                     }
 
                 } else {
+                    //here we show a toast to the user to tell him that the permission is denied
                     Toast.makeText(activity, "permission denied", Toast.LENGTH_LONG).show()
                     if (!ActivityCompat.shouldShowRequestPermissionRationale(
                             activity,
@@ -143,6 +183,7 @@ class RequestsHandler(
         }
     }
 
+    //those are lifecycle functions
     fun onPause() {
         if (ContextCompat.checkSelfPermission(
                 activity,
@@ -154,6 +195,7 @@ class RequestsHandler(
             fusedLocationProvider?.removeLocationUpdates(locationCallback)
         }
     }
+
     companion object {
         private const val MY_PERMISSIONS_REQUEST_LOCATION = 99
     }

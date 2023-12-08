@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "205973928300",
+    "project_id": "map-668c4",
+    "storage_bucket": "map-668c4.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:205973928300:android:ae72686a7f0830047c5b49",
+        "android_client_info": {
+          "package_name": "com.Amazon_map"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANi-GvaP0I3W9Wz0GLWeMs9liRPbUJEYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:205973928300:android:dcdfd600bec70b3b7c5b49",
+        "android_client_info": {
+          "package_name": "com.example.amazon_map"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyANi-GvaP0I3W9Wz0GLWeMs9liRPbUJEYE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
